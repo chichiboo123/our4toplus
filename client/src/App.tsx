@@ -20,7 +20,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-          <Router>
+          <Router base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AppRoutes />
           </Router>
         </div>
