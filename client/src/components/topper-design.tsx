@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, Check, CloudUpload } from "lucide-react";
 import { TopperData } from "@/pages/home";
+import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 interface TopperDesignProps {
@@ -29,20 +30,44 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
-  const convertImageToDataUrl = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          resolve(reader.result);
-        } else {
-          reject(new Error("Failed to read image file"));
-        }
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch("/api/upload-topper", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      return response.json() as Promise<{ imageData: string }>;
+    },
+    onSuccess: (data) => {
+      setUploadedImage(data.imageData);
+      const newTopper: TopperData = {
+        type: "upload",
+        data: data.imageData,
+        id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
-      reader.onerror = () => reject(new Error("Failed to read image file"));
-      reader.readAsDataURL(file);
-    });
-  };
+      onTopperSelect(newTopper);
+      toast({
+        title: "업로드 완료!",
+        description: "이미지가 성공적으로 업로드되었어요.",
+      });
+    },
+    onError: (error) => {
+      console.error("Upload error:", error);
+      toast({
+        title: "업로드 실패",
+        description: "이미지 업로드에 실패했어요. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -66,31 +91,7 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
         });
         return;
       }
-      try {
-        setIsUploading(true);
-        const imageData = await convertImageToDataUrl(file);
-
-        setUploadedImage(imageData);
-        const newTopper: TopperData = {
-          type: "upload",
-          data: imageData,
-          id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        };
-        onTopperSelect(newTopper);
-        toast({
-          title: "업로드 완료!",
-          description: "이미지가 성공적으로 업로드되었어요.",
-        });
-      } catch (error) {
-        console.error("Upload error:", error);
-        toast({
-          title: "업로드 실패",
-          description: "이미지 처리에 실패했어요. 다시 시도해주세요.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsUploading(false);
-      }
+      uploadMutation.mutate(file);
     }
   };
 
@@ -153,10 +154,10 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
                 <Button 
                   onClick={() => fileInputRef.current?.click()}
                   className="button-primary text-white px-8 py-3 rounded-2xl font-bold text-lg"
-                  disabled={isUploading}
+                  disabled={uploadMutation.isPending}
                 >
                   <Upload className="mr-2 w-4 h-4" />
-                  {isUploading ? '업로드 중...' : '업로드하기'}
+                  {uploadMutation.isPending ? "업로드 중..." : "업로드하기"}
                 </Button>
             </div>
 
