@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Upload, Check, CloudUpload } from "lucide-react";
 import { TopperData } from "@/pages/home";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface TopperDesignProps {
@@ -33,25 +32,25 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await fetch('/api/upload-topper', {
-        method: 'POST',
+      formData.append("image", file);
+
+      const response = await fetch("/api/upload-topper", {
+        method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error(`Upload failed: ${response.statusText}`);
       }
-      
-      return response.json();
+
+      return response.json() as Promise<{ imageData: string }>;
     },
     onSuccess: (data) => {
       setUploadedImage(data.imageData);
-      const newTopper: TopperData = { 
-        type: 'upload', 
-        data: data.imageData, 
-        id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` 
+      const newTopper: TopperData = {
+        type: "upload",
+        data: data.imageData,
+        id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
       onTopperSelect(newTopper);
       toast({
@@ -60,7 +59,7 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
       });
     },
     onError: (error) => {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       toast({
         title: "업로드 실패",
         description: "이미지 업로드에 실패했어요. 다시 시도해주세요.",
@@ -91,7 +90,6 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
         });
         return;
       }
-
       uploadMutation.mutate(file);
     }
   };
@@ -152,14 +150,14 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
                   onChange={handleFileSelect}
                 />
               </div>
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                className="button-primary text-white px-8 py-3 rounded-2xl font-bold text-lg"
-                disabled={uploadMutation.isPending}
-              >
-                <Upload className="mr-2 w-4 h-4" />
-                {uploadMutation.isPending ? '업로드 중...' : '업로드하기'}
-              </Button>
+                <Button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="button-primary text-white px-8 py-3 rounded-2xl font-bold text-lg"
+                  disabled={uploadMutation.isPending}
+                >
+                  <Upload className="mr-2 w-4 h-4" />
+                  {uploadMutation.isPending ? "업로드 중..." : "업로드하기"}
+                </Button>
             </div>
 
             {/* 이모지 선택 */}
