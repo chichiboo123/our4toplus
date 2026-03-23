@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - claude/create-ar-photobooth-app-XbWm0
   workflow_dispatch:
 
 permissions:
