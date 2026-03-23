@@ -75,7 +75,7 @@ export default function TextDownload({
   const handleDownload = async () => {
     if (finalImageData) {
       try {
-        await downloadImage(finalImageData, `포토퍼스_${frameType}_${Date.now()}.png`);
+        await downloadImage(finalImageData, `우리네컷+_${frameType}_${Date.now()}.png`);
         showSuccessMessage();
       } catch (error) {
         toast({

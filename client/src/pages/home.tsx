@@ -104,9 +104,9 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-b-3xl"></div>
         <div className="relative">
           <h1 className="font-playful text-4xl md:text-6xl font-bold text-primary mb-2 animate-bounce-gentle">
-            📸 포토퍼스
+            📸 우리네컷+
           </h1>
-          <p className="text-gray-600 text-lg font-medium">모두를 위한 사진놀이</p>
+          <p className="text-gray-600 text-lg font-medium">아이와 함께하는 AR 포토부스</p>
         </div>
       </header>
 
