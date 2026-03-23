@@ -27,6 +27,7 @@ const emojiOptions = [
 export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedToppers, onNext }: TopperDesignProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   const uploadMutation = useMutation({
@@ -68,7 +69,7 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
     },
   });
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
