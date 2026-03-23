@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -32,8 +32,11 @@ jobs:
       - name: 의존성 설치
         run: npm ci
 
-      - name: GitHub Pages 설정
+      - name: GitHub Pages 설정 (자동 활성화)
         uses: actions/configure-pages@v4
+        with:
+          enablement: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Vite 빌드 (GitHub Pages 베이스 경로 적용)
         run: npx vite build --base=/our4toplus/
