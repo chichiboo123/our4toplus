@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, Check, CloudUpload } from "lucide-react";
 import { TopperData } from "@/pages/home";
-import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 interface TopperDesignProps {
@@ -30,27 +29,41 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("image", file);
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      const response = await fetch("/api/upload-topper", {
-        method: "POST",
-        body: formData,
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "잘못된 파일 형식",
+        description: "이미지 파일만 업로드 가능해요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "파일이 너무 커요",
+        description: "5MB 이하의 이미지를 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const imageData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
 
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-
-      return response.json() as Promise<{ imageData: string }>;
-    },
-    onSuccess: (data) => {
-      setUploadedImage(data.imageData);
+      setUploadedImage(imageData);
       const newTopper: TopperData = {
         type: "upload",
-        data: data.imageData,
+        data: imageData,
         id: `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
       onTopperSelect(newTopper);
@@ -58,48 +71,22 @@ export default function TopperDesign({ onTopperSelect, onRemoveTopper, selectedT
         title: "업로드 완료!",
         description: "이미지가 성공적으로 업로드되었어요.",
       });
-    },
-    onError: (error) => {
-      console.error("Upload error:", error);
+    } catch {
       toast({
         title: "업로드 실패",
         description: "이미지 업로드에 실패했어요. 다시 시도해주세요.",
         variant: "destructive",
       });
-    },
-  });
-
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "잘못된 파일 형식",
-          description: "이미지 파일만 업로드 가능해요.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "파일이 너무 커요",
-          description: "5MB 이하의 이미지를 선택해주세요.",
-          variant: "destructive",
-        });
-        return;
-      }
-      uploadMutation.mutate(file);
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    const newTopper: TopperData = { 
-      type: 'emoji', 
-      data: emoji, 
-      id: `emoji_${emoji}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` 
+    const newTopper: TopperData = {
+      type: 'emoji',
+      data: emoji,
+      id: `emoji_${emoji}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     };
     onTopperSelect(newTopper);
   };
